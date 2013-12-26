@@ -14,10 +14,15 @@ interpret input = case runParser pMethod () "REPL" input of
     Left e  -> print e
     Right v -> print v
 
+interpretWith p input = case runParser p () "REPL" input of
+    Left e  -> print e
+    Right v -> print v
+
+
 data Method = M deriving (Show, Eq)
 
 hSpace :: Parser ()
-hSpace = satisfy (\c -> (c /= '\t') && (c /= ' ')) >> return ()
+hSpace = skipMany $ satisfy (\c -> (c == '\t') || (c == ' '))
 
 pMethod :: Parser Method
 pMethod = do
@@ -30,6 +35,11 @@ pMethod = do
     return M
 
 methodName :: Parser String
-methodName = return "foobar"
+methodName = do
+        x  <- first
+        xs <- many rest
+        return (x:xs)
+    where first = letter <|> char '_'
+          rest  = first  <|> digit
 
 
