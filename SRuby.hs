@@ -7,12 +7,14 @@ import Control.Applicative ((*>), (<*), (<*>), (<$>))
 main :: IO ()
 main = do
     line <- getLine
-    let result = interpret line
+    result <- interpret line
     print result
 
-interpret = id
+interpret input = case runParser pMethod () "REPL" input of
+    Left e  -> print e
+    Right v -> print v
 
-data Method = M
+data Method = M deriving (Show, Eq)
 
 hSpace :: Parser ()
 hSpace = satisfy (\c -> (c /= '\t') && (c /= ' ')) >> return ()
