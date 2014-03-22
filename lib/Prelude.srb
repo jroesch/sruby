@@ -1,3 +1,10 @@
-def foobar(x, y)
-  x = 1
-end
+module Prelude
+
+import SRC
+import FooBar
+import Sex
+
+syntax if ( <v: Value> ) <v: Value> end = 1
+
+foo : Int
+foo = case 1 of { 1 => 1 }
