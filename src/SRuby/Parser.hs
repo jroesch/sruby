@@ -7,8 +7,8 @@ import Control.Applicative ((<*))
 import SRuby.Parser.Core
 import SRuby.Parser.Types
 
-programParser :: Parser Module
-programParser = moduleP <* ceof
+programParser :: Parser Program
+programParser = program
 
-replParser :: Parser Term
-replParser = term
+replParser :: Parser Program
+replParser = program

@@ -13,7 +13,7 @@ main = do
     case (args !! 0) of
         "-f" -> do
             contents <- readFile (args !! 1)
-            result <- interpretProgram contents
+            result <- interpretProgram (args !! 1) contents
             print result
         "-i" -> repl
 
@@ -25,6 +25,5 @@ repl = runInputT defaultSettings $ forever $ do
                 Just ":quit" ->
                   return ()
                 Just input -> do
-                  r <- lift $ interpretTerm input
+                  r <- lift $ interpretTerm "Interactive" input
                   outputStrLn $ show r
-
