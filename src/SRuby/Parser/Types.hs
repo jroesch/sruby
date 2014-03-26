@@ -38,16 +38,19 @@ data Program = Program {
 
 data Class = Class {
     _className :: Id,
+    _classTyvars :: [TyVar],
     _methods :: [Method]
 } deriving (Show)
 
 data Method = Method {
     _methodName :: Id,
+    _methodTyvars :: [TyVar],
     _params :: [(Id, Type)],
+    _rettype :: Type,
     _body :: [Statement]
 } deriving (Show)
 
-data Statement = Statement Expression deriving (Show)
+data Statement = Exp Expression deriving (Show)
 
 data Expression = Access Ref
                 | Assign Ref Expression
@@ -68,6 +71,8 @@ data Value = Fixnum Integer
 data Type = Name Id
           | Dynamic
           deriving (Eq, Show)
+
+data TyVar = TyVar Id deriving (Eq, Show)
 
 data Id = Id String SourcePos deriving (Eq, Show)
 
