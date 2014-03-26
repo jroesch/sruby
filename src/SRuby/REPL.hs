@@ -11,6 +11,14 @@ import System.Process
 import System.Environment
 import System.IO
 
+import SRuby.Typecheck
+
+{- tryCheck :: IO ()
+tryCheck =
+  print $ cofreeMu (Value (Fixnum 1))
+  print . attribute $ cofreeMu example
+  print . typeTree $ cofreeMu example -}
+
 repl :: IO ()
 repl = runInputT defaultSettings $ do
          (irbin, irbout, irberr, _) <- lift $ createIRB
@@ -22,8 +30,8 @@ repl = runInputT defaultSettings $ do
                return ()
              Just input -> do
                let staticRuby = runParserWithInput program "sirb" input
-               let compiledRuby = T.unpack $ generateRuby staticRuby
-               -- lift $ putStrLn $ "Compiled: \n" ++ compiledRuby 
+               let compiledRuby = T.unpack $ generateRuby $ typeProgram $ staticRuby
+               -- lift $ putStrLn $ "Compiled: \n" ++ compiledRuby
                lift $ hPutStrLn irbin compiledRuby
                echo <- lift $ hGetLine {- readUntilResult -} irbout
                result <- lift $ hGetLine irbout
@@ -39,7 +47,7 @@ readUntilResult handle = do
         return $ (ln:rest)
   where isResult ('=':'>':_) = True
         isResult _ = False -}
-    
+
 createIRB :: IO (Handle, Handle, Handle, ProcessHandle)
 createIRB = do
     result @ (inn, out, error, proc) <- runInteractiveCommand "irb"

@@ -9,6 +9,7 @@ import SRuby.Parser.Types (ParserState(..))
 -- import SRuby.Inference
 -- import SRuby.Util.UnionFind (newUnionFind)
 import SRuby.Codegen.Ruby (generateRuby)
+import SRuby.Typecheck
 import qualified Data.Text.Lazy as T
 
 import Debug.Trace
@@ -17,7 +18,7 @@ interpretProgram = interpretWith programParser
 
 interpretTerm = interpretWith replParser
 
-interpretWith p f = putStrLn . T.unpack . generateRuby . (runParserWithInput p f)
+interpretWith p f = putStrLn . T.unpack . generateRuby . typeProgram . (runParserWithInput p f)
 
 runParserWithInput p fname input =
     let tokens = filter notTComment (tokenize fname input)

@@ -1,6 +1,8 @@
+{-# LANGUAGE DataKinds #-}
 module SRuby.Parser.Core where
 
 import Control.Applicative ((*>), (<*), (<*>), (<$>))
+import Control.Comonad.Cofree
 import Control.Lens
 import Control.Monad.State as S
 
@@ -13,41 +15,38 @@ import System.Environment
 
 import SRuby.Lexer
 import SRuby.Parser.Prim
-import SRuby.Parser.Types
+import SRuby.Parser.Types as T hiding (TFixnum)
 
-program :: Parser Program
+program :: Parser (Program Unchecked)
 program = do
     clss <- many (classP <* delim)
     ms <- many (method <* delim)
-    statements <- many (statement)
-    return $ Program clss ms statements
+    body <- statement
+    return $ Program clss ms body
 
-classP :: Parser Class
+classP :: Parser (Class Unchecked)
 classP = do
     match TClass
     name <- identifier
-    mvars <- optionMaybe tyvars <* delim
-    let vars = case mvars of
-                 Nothing -> []
-                 Just v -> v
+    vars <- fromMaybe [] <$> optionMaybe tyvars <* delim
     ms <- methods
     match TEnd
     return $ Class name vars ms
   where methods = method `sepEndBy` delim
 
-tyvars :: Parser [TyVar]
+tyvars :: Parser [TyParam]
 tyvars = do
   match TLSquare
-  types <- (TyVar <$> identifier) `sepBy1` (match TComma)
+  types <- (TyParam <$> identifier) `sepBy1` (match TComma)
   match TRSquare
   return types
 
 typeP :: Parser Type
 typeP = do
   name <- identifier
-  return $ Name name
+  return $ TName name
 
-method :: Parser Method
+method :: Parser (Method Unchecked)
 method = do
   match TDef
   methodName <- identifier
@@ -59,10 +58,10 @@ method = do
   let params = case mparams of
                 Nothing -> []
                 Just ps -> ps
-  statements <- assignment `sepEndBy` delim
+  body <- statement
   let rtype = undefined
   match TEnd
-  return $ Method methodName tvars params rtype statements
+  return $ Method methodName tvars params rtype body
 
 paramList :: Parser [(Id, Type)]
 paramList = parens $ param `sepBy` (match TComma)
@@ -70,21 +69,21 @@ paramList = parens $ param `sepBy` (match TComma)
             name <- identifier
             mtpe <- optionMaybe $ match TColon *> typename
             case mtpe of
-              Nothing  -> return $ (name, Dynamic)
-              Just tpe -> return $ (name,  Name tpe)
+              Nothing  -> return $ (name, TDynamic)
+              Just tpe -> return $ (name,  TName tpe)
 
 typename = identifier
 
-statement :: Parser Statement
-statement = assignment
-         <|> (Exp . Val) <$> value
+statement :: Parser (Cofree Statement ())
+statement = undefined {- assignment
+         <|> (Exp . Val) <$> value -}
 
-assignment :: Parser Statement
-assignment = do
+assignment :: Parser (Cofree Statement ())
+assignment = undefined {- do
     r <- ref
     match TEq
     exp <- expression
-    return $ Exp $ Assign r exp
+    return $ Exp $ Assign r exp -}
 
 ref :: Parser Ref
 ref = Var <$> identifier
@@ -93,8 +92,8 @@ ref = Var <$> identifier
    <|> path
  where path = Path <$> identifier <*> ref
 
-expression = Val <$> value
-          <|> Access <$> ref
+expression :: Cofree Expression ()
+expression = undefined {- Val <$> value <|> Access <$> ref -}
 
 value :: Parser Value
 value = Fixnum <$> fixnum

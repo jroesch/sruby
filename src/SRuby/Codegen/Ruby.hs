@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds #-}
 module SRuby.Codegen.Ruby where
 
 import Control.Applicative
+import Control.Comonad.Cofree
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Writer
 import Data.Functor
@@ -62,21 +65,21 @@ sepEndBy sep bs = sepBy sep bs `mappend` sep
 parens :: Builder -> Builder
 parens b = TB.singleton '(' `mappend` (b `mappend` (TB.singleton ')'))
 
-instance RubyGen Program where
-  asBuilder (Program classes methods statements) = do
+instance RubyGen (Program Checked) where
+  asBuilder (Program classes methods statement) = do
       cs <- sepEndBy (newline `mappend` newline) <$> mapM asBuilder classes
       ms <- sepEndBy newline <$> mapM asBuilder methods
-      ss <- sepBy newline <$> mapM asBuilder statements
+      ss <- asBuilder statement
       pure $ concatBuilders [cs, ms, ss]
 
-instance RubyGen Class where
+instance RubyGen (Class Checked) where
   asBuilder (Class name _ ms) = do
       cl <- linestart "class "
       className <- asBuilder name
       methods <- indent (sepEndBy newline <$> mapM asBuilder ms)
       return $ concatBuilders [cl, className, newline, methods, end]
 
-instance RubyGen Method where
+instance RubyGen (Method Checked) where
   asBuilder (Method name _ params _ body) = do
       def <- linestart "def "
       end <- linestart "end"
@@ -89,12 +92,13 @@ instance RubyGen Method where
       return $ concatBuilders [def, methodName, paramList, newline, end]
     where ternary cond t f = if cond then t else f
 
-instance RubyGen Statement where
-  asBuilder (Exp e) = asBuilder e
+instance RubyGen (Cofree Statement Type) where
+  asBuilder = undefined -- (Exp e) = asBuilder e
 
-instance RubyGen Expression where
-  asBuilder (Val v) = asBuilder v
-  asBuilder _ = error "unimplemented case for exp"
+instance RubyGen (Cofree Expression Type) where
+    asBuilder = undefined
+  -- asBuilder (Val v) = asBuilder v
+  -- asBuilder _ = error "unimplemented case for exp"
 
 instance RubyGen Value where
   asBuilder (Fixnum v) = text (T.pack (show v))
