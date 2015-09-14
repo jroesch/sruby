@@ -1,11 +1,10 @@
 module SRuby.Util.UnionFind where
 
 import qualified Data.Map as M
-import Data.Maybe (fromMaybe)
 
 newUnionFind xs = M.fromList $ zip xs [0..]
 
-find m i = fromMaybe (error "No such type binding for name") $ M.lookup i m
+find m i = M.findWithDefault (error "No such type binding for name") i m
 
 union m i j = do
     x <- M.lookup i m
